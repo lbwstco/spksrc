@@ -8,8 +8,8 @@ SPK_ICON = src/python.png
 DEPENDS = cross/busybox cross/python2
 
 # Cross-compiled libraries and tools
-DEPENDS += cross/setuptools cross/wheel cross/pip_py2
-DEPENDS += cross/cryptography cross/cffi cross/bcrypt
+DEPENDS += cross/setuptools_py2 cross/wheel cross/pip_py2
+DEPENDS += cross/cryptography-legacy cross/cffi cross/bcrypt
 
 # Cross-compiled wheels
 DEPENDS += cross/lxml cross/m2crypto cross/msgpack-python cross/pillow_py2
@@ -19,11 +19,11 @@ DEPENDS += cross/pyyaml cross/pyzmq cross/uwsgi
 WHEELS = src/requirements.txt
 
 
-MAINTAINER = Safihre
+MAINTAINER = SynoCommunity
 DESCRIPTION = Python 2.7 Programming Language.
 DESCRIPTION_FRE = Langage de programmation Python 2.7.
 DESCRIPTION_SPN = Lenguaje de programación Python 2.7.
-RELOAD_UI = yes
+
 STARTABLE = no
 DISPLAY_NAME = Python2
 CHANGELOG = "Update depencencies (PyYAML, cryptography and others) including security fixes for CVE-2020-14343."

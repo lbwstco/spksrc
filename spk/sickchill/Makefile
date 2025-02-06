@@ -1,25 +1,40 @@
 SPK_NAME = sickchill
-SPK_VERS = $(shell date +%Y%m%d)
-SPK_REV = 1
+SPK_VERS = 20230627
+SPK_REV = 10
 SPK_ICON = src/sickchill.png
 
-DEPENDS = cross/$(SPK_NAME)
-SPK_DEPENDS = "python3>=3.6:git"
-PIP=pip3
+PYTHON_PACKAGE = python311
 
-WHEELS = src/requirements.txt
+SPK_DEPENDS = "python311>=3.11.5-8"
 
-MAINTAINER = Nyaran
+# archs without C++11 support are not supported:
+UNSUPPORTED_ARCHS = $(ARMv5_ARCHS) $(OLD_PPC_ARCHS)
+
+# [lxml]
+DEPENDS += cross/libxml2
+DEPENDS += cross/libxslt
+
+# [PyNaCl]
+DEPENDS += cross/libsodium
+ENV += SODIUM_INSTALL=system
+
+# [cryptography]
+DEPENDS += cross/cryptography
+
+WHEELS = src/requirements-crossenv.txt src/requirements-pure.txt
+
+
+MAINTAINER = miigotu
 DESCRIPTION = Automatic Video Library Manager for TV Shows. It watches for new episodes of your favorite shows, and when they are posted it does its magic.
-DESCRIPTION_SPN = Gestor automático para bibliotecas de series. Busca nuevos episodios de tus series favoritas, y cuando son publicados hace su magia.
 STARTABLE = yes
 DISPLAY_NAME = SickChill
-CHANGELOG = "Initial SickChill version"
+CHANGELOG = "1. A wheel based install, git installs are not supported by upstream.<br/>2. Python update to 3.11<br/>3. Deprecated ARMv5 (88f628x) as no compiler support for updated dependencies<br/>4. Migrate to OpenSSL 3.1.2<br/>5. Fix for newer shared python"
 
-HOMEPAGE   = https://sickchill.github.io/
-LICENSE    = GPL
+HOMEPAGE = https://sickchill.github.io/
+LICENSE = GPLv3+
 
 SERVICE_USER = auto
+
 SERVICE_SETUP = src/service-setup.sh
 SERVICE_PORT = 8081
 SERVICE_PORT_TITLE = $(DISPLAY_NAME)
@@ -29,12 +44,25 @@ ADMIN_PORT = $(SERVICE_PORT)
 
 WIZARDS_DIR = src/wizard/
 
+USE_ALTERNATE_TMPDIR = 1
+
 POST_STRIP_TARGET = sickchill_extra_install
 
-# Pure Python package, make sure ARCH is not defined
-override ARCH=
+include ../../mk/spksrc.python.mk
 
-include ../../mk/spksrc.spk.mk
+
+ifeq ($(call version_lt, $(TC_GCC), 4.8.1),1)
+# archs without C++11 support are not supported:
+UNSUPPORTED_ARCHS = $(ARCHS)
+endif
+
+# [greenlet]
+ifeq ($(call version_lt, ${TC_GCC}, 5.0),1)
+WHEELS_CPPFLAGS = [greenlet] -std=c++11 -fpermissive
+endif
+
+# prefere native python tools (pip, maturin, ...)
+ENV += PATH=$(abspath $(WORK_DIR)/../../../native/python311/work-native/install/usr/local/bin):$(PATH)
 
 .PHONY: sickchill_extra_install
 sickchill_extra_install:
